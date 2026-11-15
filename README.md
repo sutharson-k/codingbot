@@ -1,4 +1,4 @@
-# 🤖 CodingBot: Autonomous Coding Agent Engine in Rust
+# CodingBot: Autonomous Coding Agent Engine in Rust
 
 <div align="center">
 
@@ -11,18 +11,18 @@
 **An autonomous, self-healing software engineering agent built in pure, high-performance Rust.**  
 *Indexes repositories • Plans architecture • Generates code • Runs test suites • Self-corrects on failures • Produces clean Git diffs and PRs*
 
-[Key Features](#-key-features) •
-[Architecture](#-architecture) •
-[Quickstart](#-quickstart) •
-[CLI Reference](#-cli-reference) •
-[Self-Correction Cycle](#-the-self-correction-loop) •
-[Rust API](#-rust-library-usage)
+[Overview](#overview) •
+[Architecture](#architecture--state-machine) •
+[Quickstart](#quickstart) •
+[CLI Reference](#cli-reference) •
+[Self-Correction Cycle](#the-self-correction-loop) •
+[Rust API](#rust-library-usage)
 
 ---
 
 </div>
 
-## 🌟 Overview
+## Overview
 
 **CodingBot** is a production-grade autonomous coding agent runtime designed from the ground up in Rust. Rather than relying on simple linear scripts, CodingBot implements a **LangGraph-inspired cyclic directed state graph (`StateGraph`)**.
 
@@ -36,7 +36,7 @@ When tasked with implementing a feature or fixing a bug, CodingBot autonomously:
 
 ---
 
-## 📐 Architecture & State Machine
+## Architecture & State Machine
 
 CodingBot's execution is orchestrated by an asynchronous directed state machine with dynamic conditional branching:
 
@@ -103,7 +103,7 @@ flowchart TD
 
 ---
 
-## 🔁 The Self-Correction Loop
+## The Self-Correction Loop
 
 One of the biggest limitations of standard coding assistants is "one-shot generation" where compilation errors or subtle bugs require manual user intervention.
 
@@ -140,7 +140,7 @@ CodingBot solves this with its **Autonomous Self-Correction Cycle**:
 
 ---
 
-## ⚡ Quickstart
+## Quickstart
 
 ### Prerequisites
 - [Rust & Cargo](https://rustup.rs/) (edition 2021 or 2024)
@@ -158,7 +158,7 @@ The compiled binary will be located at `target/release/codingbot` (or `target/re
 
 ---
 
-## 🎮 Interactive CLI Commands
+## Interactive CLI Commands
 
 ### 1. Instant Autonomous Demo
 Runs an end-to-end autonomous demonstration in an isolated sandbox. It initializes a Git repository, introduces a task, deliberately injects an initial edge-case bug, detects the test failure, automatically self-corrects, passes the test suite, and outputs the Git diff and Pull Request preview:
@@ -188,7 +188,7 @@ cargo run -- run \
 
 ---
 
-## 🔌 LLM Provider Support
+## LLM Provider Support
 
 CodingBot supports pluggable LLM backends:
 
@@ -213,7 +213,7 @@ cargo run -- run \
 
 ---
 
-## 📖 CLI Reference
+## CLI Reference
 
 ```
 Autonomous coding agent workflow in Rust using a LangGraph-style state machine
@@ -246,7 +246,7 @@ Options:
 
 ---
 
-## 💻 Rust Library Usage
+## Rust Library Usage
 
 You can embed CodingBot's `StateGraph` engine directly into your own Rust services:
 
@@ -286,7 +286,7 @@ async fn main() -> anyhow::Result<()> {
 
 ---
 
-## 🧪 Verification & Test Suite
+## Verification & Test Suite
 
 All core capabilities are rigorously tested, including conditional looping, linear graph transitions, and the end-to-end self-correction cycle:
 
@@ -306,7 +306,7 @@ test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 ---
 
-## 📜 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for details.
 
@@ -314,6 +314,6 @@ Distributed under the MIT License. See `LICENSE` for details.
 
 <div align="center">
 
-Built with ❤️ in Rust. Powered by LangGraph State Machine principles.
+Built with Rust. Powered by LangGraph State Machine principles.
 
 </div>
