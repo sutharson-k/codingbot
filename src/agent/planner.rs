@@ -23,7 +23,7 @@ impl Node for PlanNode {
     }
 
     async fn execute(&self, state: &mut AgentState) -> Result<()> {
-        println!(
+        qprintln!(state,
             "   {} Formulating architecture plan for task: '{}'...",
             "[*]".blue(),
             state.task
@@ -73,7 +73,6 @@ Output your response as pure JSON matching this schema:
 
         let cleaned_json = extract_json_block(&response);
         let plan: TaskPlan = serde_json::from_str(&cleaned_json).unwrap_or_else(|_| {
-            // Sensible fallback if model outputs free text
             TaskPlan {
                 objective: state.task.clone(),
                 files_to_touch: vec!["src/lib.rs".to_string()],
@@ -88,15 +87,17 @@ Output your response as pure JSON matching this schema:
             }
         });
 
-        println!(
+        qprintln!(state,
             "   {} Plan formulated: {} (touching {} files)",
             "[+]".green(),
             plan.objective.bold(),
             plan.files_to_touch.len() + plan.files_to_create.len()
         );
 
-        for step in &plan.step_by_step_strategy {
-            println!("      {} {}", "•".cyan(), step);
+        if !state.quiet {
+            for step in &plan.step_by_step_strategy {
+                println!("      {} {}", "•".cyan(), step);
+            }
         }
 
         state.plan = Some(plan);

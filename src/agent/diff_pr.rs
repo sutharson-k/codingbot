@@ -14,7 +14,7 @@ impl Node for CreateDiffOrPrNode {
     }
 
     async fn execute(&self, state: &mut AgentState) -> Result<()> {
-        println!(
+        qprintln!(state,
             "   {} Generating clean Git diff and Pull Request description...",
             "[*]".blue()
         );
@@ -25,7 +25,6 @@ impl Node for CreateDiffOrPrNode {
             .map(|r| r.success)
             .unwrap_or(false);
 
-        // Fetch git diff
         let diff = if git::is_git_repo(&state.repo_path) {
             git::git_diff(&state.repo_path).unwrap_or_default()
         } else {
@@ -33,7 +32,6 @@ impl Node for CreateDiffOrPrNode {
         };
 
         let diff_str = if diff.trim().is_empty() {
-            // Synthesize fallback patch representation from recorded patches
             let mut synth = String::new();
             for patch in &state.patches {
                 synth.push_str(&format!(
@@ -62,37 +60,39 @@ impl Node for CreateDiffOrPrNode {
             chrono::Utc::now().format("%Y%m%d-%H%M%S")
         );
 
-        // Create git branch and commit if requested or in demo mode
         let should_commit = state.metadata.get("create_branch").map(|s| s.as_str()) == Some("true")
             || state.metadata.get("is_demo").map(|s| s.as_str()) == Some("true");
 
         if should_commit && git::is_git_repo(&state.repo_path) {
-            println!(
+            qprintln!(state,
                 "   {} Creating dedicated git branch '{}' and committing...",
                 "[*]".blue(),
                 branch_name.cyan()
             );
             if let Err(e) = git::git_checkout_new_branch(&state.repo_path, &branch_name) {
-                eprintln!("   Warning: could not checkout branch: {}", e);
+                if !state.quiet {
+                    eprintln!("   Warning: could not checkout branch: {}", e);
+                }
             }
             let commit_msg = format!(
                 "feat: {}\n\nAutonomous coding workflow completed in {} iterations.\nTests passed: {}",
                 state.task, state.iteration, tests_passed
             );
             if let Err(e) = git::git_commit_all(&state.repo_path, &commit_msg) {
-                eprintln!("   Warning: could not commit changes: {}", e);
+                if !state.quiet {
+                    eprintln!("   Warning: could not commit changes: {}", e);
+                }
             } else {
-                println!("   {} Committed changes to git successfully.", "[+]".green());
+                qprintln!(state, "   {} Committed changes to git successfully.", "[+]".green());
             }
         }
 
-        // Build comprehensive markdown PR description
         let mut pr_md = String::new();
         pr_md.push_str(&format!("# Autonomous Agent PR: {}\n\n", state.task));
-        pr_md.push_str("## 🎯 Objective\n");
+        pr_md.push_str("## Objective\n");
         if let Some(plan) = &state.plan {
             pr_md.push_str(&format!("{}\n\n", plan.objective));
-            pr_md.push_str("### 📋 Implementation Strategy\n");
+            pr_md.push_str("### Implementation Strategy\n");
             for step in &plan.step_by_step_strategy {
                 pr_md.push_str(&format!("- {}\n", step));
             }
@@ -101,27 +101,23 @@ impl Node for CreateDiffOrPrNode {
             pr_md.push_str(&format!("Implemented task: {}\n\n", state.task));
         }
 
-        pr_md.push_str("## 🛠️ Changes Made\n");
+        pr_md.push_str("## Changes Made\n");
         for file in &files_changed {
             pr_md.push_str(&format!("- `{}`\n", file));
         }
         pr_md.push_str("\n");
 
-        pr_md.push_str("## 🧪 Verification & Test Results\n");
+        pr_md.push_str("## Verification & Test Results\n");
         if let Some(res) = &state.test_result {
             pr_md.push_str(&format!(
                 "- **Test Command**: `{}`\n- **Status**: {}\n- **Duration**: {}ms\n\n",
                 res.command,
-                if res.success {
-                    "✅ **PASSED (Zero regressions)**"
-                } else {
-                    "❌ **FAILED**"
-                },
+                if res.success { "PASSED" } else { "FAILED" },
                 res.duration_millis
             ));
         }
 
-        pr_md.push_str("## 🔄 Self-Correction Cycle Report\n");
+        pr_md.push_str("## Self-Correction Cycle Report\n");
         pr_md.push_str(&format!(
             "- **Total Iterations**: {} (Max allowed: {})\n",
             state.iteration, state.max_retries
@@ -135,7 +131,7 @@ impl Node for CreateDiffOrPrNode {
         }
         pr_md.push_str("\n");
 
-        pr_md.push_str("## 📄 Clean Git Diff\n```diff\n");
+        pr_md.push_str("## Clean Git Diff\n```diff\n");
         pr_md.push_str(&diff_str);
         if !diff_str.ends_with('\n') {
             pr_md.push('\n');
@@ -161,14 +157,14 @@ impl Node for CreateDiffOrPrNode {
             ),
         );
 
-        println!(
+        qprintln!(state,
             "\n{}",
             "=================== CLEAN GIT DIFF ==================="
                 .green()
                 .bold()
         );
-        println!("{}", diff_str);
-        println!(
+        qprintln!(state, "{}", diff_str);
+        qprintln!(state,
             "{}",
             "======================================================"
                 .green()

@@ -37,25 +37,21 @@ impl StateGraph {
         }
     }
 
-    /// Add a processing node to the graph
     pub fn add_node(&mut self, name: &str, node: Box<dyn Node>) -> &mut Self {
         self.nodes.insert(name.to_string(), node);
         self
     }
 
-    /// Set the initial node where graph execution begins
     pub fn set_entry_point(&mut self, name: &str) -> &mut Self {
         self.entry_point = Some(name.to_string());
         self
     }
 
-    /// Add an unconditional edge from `from` node to `to` node
     pub fn add_edge(&mut self, from: &str, to: &str) -> &mut Self {
         self.edges.insert(from.to_string(), to.to_string());
         self
     }
 
-    /// Add a dynamic conditional edge evaluated based on the current `AgentState`
     pub fn add_conditional_edge<F>(&mut self, from: &str, router: F) -> &mut Self
     where
         F: Fn(&AgentState) -> String + Send + Sync + 'static,
@@ -65,7 +61,6 @@ impl StateGraph {
         self
     }
 
-    /// Register a callback to observe state changes after each step
     pub fn on_step<F>(&mut self, callback: F) -> &mut Self
     where
         F: Fn(&str, &AgentState) + Send + Sync + 'static,
@@ -74,7 +69,6 @@ impl StateGraph {
         self
     }
 
-    /// Validate the graph topology
     pub fn validate(&self) -> Result<()> {
         let entry = self
             .entry_point
@@ -103,7 +97,6 @@ impl StateGraph {
         Ok(())
     }
 
-    /// Generate a Mermaid diagram of the StateGraph
     pub fn to_mermaid(&self) -> String {
         let mut lines = Vec::new();
         lines.push("flowchart TD".to_string());
@@ -125,7 +118,6 @@ impl StateGraph {
         lines.join("\n")
     }
 
-    /// Execute the state machine cycle starting from entry_point until reaching END_NODE
     pub async fn run(&self, mut state: AgentState) -> Result<AgentState> {
         self.validate()?;
 
@@ -133,18 +125,18 @@ impl StateGraph {
         let mut total_steps = 0;
         const SAFETY_MAX_STEPS: usize = 50;
 
-        println!(
+        qprintln!(state,
             "\n{}",
             "================================================================"
                 .cyan()
                 .bold()
         );
-        println!(
+        qprintln!(state,
             "{} {}",
             "  LANGGRAPH AGENT WORKFLOW STARTED:".green().bold(),
             state.task.bold()
         );
-        println!(
+        qprintln!(state,
             "{}",
             "================================================================"
                 .cyan()
@@ -165,27 +157,24 @@ impl StateGraph {
                 .get(&current_node_name)
                 .with_context(|| format!("Node '{}' not found in graph", current_node_name))?;
 
-            println!(
+            qprintln!(state,
                 "\n{} [{}] Node: {}",
                 "->".blue().bold(),
                 total_steps.to_string().yellow(),
                 current_node_name.to_uppercase().cyan().bold()
             );
 
-            // Execute node
             node.execute(&mut state).await.with_context(|| {
                 format!("Execution failed at node '{}'", current_node_name)
             })?;
 
-            // Notify listeners
             for listener in &self.step_listeners {
                 listener(&current_node_name, &state);
             }
 
-            // Determine next node
             let next_node = if let Some(router) = self.conditional_edges.get(&current_node_name) {
                 let destination = router(&state);
-                println!(
+                qprintln!(state,
                     "   {} Conditional route decided: {}",
                     "?".magenta().bold(),
                     destination.yellow().bold()
@@ -194,24 +183,23 @@ impl StateGraph {
             } else if let Some(target) = self.edges.get(&current_node_name) {
                 target.clone()
             } else {
-                // If no edge exists from this node, assume it flows to END
                 END_NODE.to_string()
             };
 
             current_node_name = next_node;
         }
 
-        println!(
+        qprintln!(state,
             "\n{}",
             "================================================================"
                 .cyan()
                 .bold()
         );
-        println!(
+        qprintln!(state,
             "{}",
             "  LANGGRAPH AGENT WORKFLOW REACHED END NODE".green().bold()
         );
-        println!(
+        qprintln!(state,
             "{}",
             "================================================================"
                 .cyan()

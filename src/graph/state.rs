@@ -46,6 +46,9 @@ pub struct AgentState {
 
     /// Generic key-value store for node scratchpad data
     pub metadata: HashMap<String, String>,
+
+    /// When true, suppress all println! output (used by TUI mode)
+    pub quiet: bool,
 }
 
 impl AgentState {
@@ -65,6 +68,7 @@ impl AgentState {
             is_successful: false,
             error_message: None,
             metadata: HashMap::new(),
+            quiet: false,
         }
     }
 

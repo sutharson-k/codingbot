@@ -23,7 +23,7 @@ impl Node for RunTestsNode {
             "cargo test".to_string()
         };
 
-        println!(
+        qprintln!(state,
             "   {} Executing test suite: '{}' in '{}'...",
             "[*]".blue(),
             test_cmd.yellow(),
@@ -54,25 +54,27 @@ impl Node for RunTestsNode {
         let parsed_errors = parse_diagnostics(&stdout, &stderr);
 
         if success {
-            println!(
+            qprintln!(state,
                 "   {} Tests PASSED in {}ms! All test cases green.",
                 "[PASS]".green().bold(),
                 duration
             );
         } else {
-            println!(
+            qprintln!(state,
                 "   {} Tests FAILED (exit code: {:?}) in {}ms",
                 "[FAIL]".red().bold(),
                 exit_code,
                 duration
             );
-            for err in &parsed_errors {
-                println!(
-                    "      {} [{:?}] {}",
-                    "!".red(),
-                    err.error_type,
-                    err.message.trim()
-                );
+            if !state.quiet {
+                for err in &parsed_errors {
+                    println!(
+                        "      {} [{:?}] {}",
+                        "!".red(),
+                        err.error_type,
+                        err.message.trim()
+                    );
+                }
             }
         }
 
@@ -113,7 +115,6 @@ fn parse_command_str(cmd: &str) -> (String, Vec<String>) {
 fn parse_diagnostics(stdout: &str, stderr: &str) -> Vec<ParsedError> {
     let mut errors = Vec::new();
 
-    // Check stderr for compilation errors
     for line in stderr.lines() {
         if line.contains("error[E") || line.starts_with("error:") {
             errors.push(ParsedError {
@@ -125,7 +126,6 @@ fn parse_diagnostics(stdout: &str, stderr: &str) -> Vec<ParsedError> {
         }
     }
 
-    // Check stdout for test assertion failures and panics
     for line in stdout.lines() {
         if line.contains("FAILED") || line.contains("panicked at") || line.contains("assertion `left == right` failed") {
             errors.push(ParsedError {

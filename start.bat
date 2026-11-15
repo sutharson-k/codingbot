@@ -35,10 +35,11 @@ echo   3. View State Machine Graph (ASCII ^& Mermaid Topology)
 echo   4. Run Coding Agent on Custom Task / Repository
 echo   5. Run Test Suite (cargo test)
 echo   6. Build Release Executable (cargo build --release)
-echo   7. Exit
+echo   7. Reset / Clear Terminal Screen
+echo   8. Exit
 echo.
 echo ================================================================
-set /p CHOICE="Select an option (1-7): "
+set /p CHOICE="Select an option (1-8): "
 
 if "%CHOICE%"=="1" goto RUN_GUI
 if "%CHOICE%"=="2" goto RUN_DEMO
@@ -46,9 +47,10 @@ if "%CHOICE%"=="3" goto RUN_GRAPH
 if "%CHOICE%"=="4" goto RUN_CUSTOM
 if "%CHOICE%"=="5" goto RUN_TESTS
 if "%CHOICE%"=="6" goto RUN_BUILD
-if "%CHOICE%"=="7" goto EXIT
+if "%CHOICE%"=="7" goto RESET_TERM
+if "%CHOICE%"=="8" goto EXIT
 echo.
-echo [!] Invalid selection, please enter 1 to 7.
+echo [!] Invalid selection, please enter 1 to 8.
 timeout /t 2 >nul
 goto MENU
 
@@ -56,6 +58,7 @@ goto MENU
 cls
 echo [CodingBot] Launching full-screen Terminal Dashboard...
 cargo run -- gui
+cls
 goto MENU
 
 :RUN_DEMO
@@ -124,7 +127,14 @@ echo Press any key to return to menu...
 pause >nul
 goto MENU
 
+:RESET_TERM
+cls
+echo Terminal reset and cleared.
+timeout /t 1 >nul
+goto MENU
+
 :EXIT
+cls
 echo Exiting CodingBot. Goodbye!
 endlocal
 exit /b 0

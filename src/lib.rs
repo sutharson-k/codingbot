@@ -1,3 +1,5 @@
+#[macro_use]
+pub mod macros;
 pub mod agent;
 pub mod git;
 pub mod graph;

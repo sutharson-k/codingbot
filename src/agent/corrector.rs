@@ -26,28 +26,34 @@ pub fn evaluation_router(state: &AgentState) -> String {
         .unwrap_or(false);
 
     if test_success {
-        println!(
-            "   {} Routing to '{}' (All tests green)",
-            "[DECISION]".magenta().bold(),
-            "create_diff_pr".green()
-        );
+        if !state.quiet {
+            println!(
+                "   {} Routing to '{}' (All tests green)",
+                "[DECISION]".magenta().bold(),
+                "create_diff_pr".green()
+            );
+        }
         "create_diff_pr".to_string()
     } else if state.iteration < state.max_retries {
-        println!(
-            "   {} Routing to '{}' (Tests failed, retry {}/{})",
-            "[DECISION]".magenta().bold(),
-            "self_correct".yellow(),
-            state.iteration + 1,
-            state.max_retries
-        );
+        if !state.quiet {
+            println!(
+                "   {} Routing to '{}' (Tests failed, retry {}/{})",
+                "[DECISION]".magenta().bold(),
+                "self_correct".yellow(),
+                state.iteration + 1,
+                state.max_retries
+            );
+        }
         "self_correct".to_string()
     } else {
-        println!(
-            "   {} Routing to '{}' (Max retries {} reached without clean pass)",
-            "[DECISION]".magenta().bold(),
-            "create_diff_pr".red(),
-            state.max_retries
-        );
+        if !state.quiet {
+            println!(
+                "   {} Routing to '{}' (Max retries {} reached without clean pass)",
+                "[DECISION]".magenta().bold(),
+                "create_diff_pr".red(),
+                state.max_retries
+            );
+        }
         "create_diff_pr".to_string()
     }
 }
@@ -61,7 +67,7 @@ impl Node for SelfCorrectionNode {
     async fn execute(&self, state: &mut AgentState) -> Result<()> {
         state.iteration += 1;
 
-        println!(
+        qprintln!(state,
             "   {} Initiating autonomous self-correction cycle (Attempt {}/{})...",
             "[REPAIR]".yellow().bold(),
             state.iteration,
@@ -115,11 +121,10 @@ Return the complete corrected file content enclosed in markdown code fences (```
 
             let repaired_code = extract_code_block(&llm_reply);
 
-            // Write repaired code to disk
             fs::write(&full_path, &repaired_code)
                 .with_context(|| format!("Failed to write self-corrected code to {:?}", full_path))?;
 
-            println!(
+            qprintln!(state,
                 "   {} Repaired file '{}' ({} bytes)",
                 "[FIXED]".green(),
                 rel_path.cyan(),

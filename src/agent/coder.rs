@@ -24,7 +24,7 @@ impl Node for CodeGenerationNode {
     }
 
     async fn execute(&self, state: &mut AgentState) -> Result<()> {
-        println!(
+        qprintln!(state,
             "   {} Synthesizing code patches (Iteration {}/{})...",
             "[*]".blue(),
             state.iteration,
@@ -77,17 +77,15 @@ Return the complete file content enclosed within markdown code fences (e.g. ```r
 
             let code = extract_code_block(&llm_reply);
 
-            // Ensure parent directory exists
             if let Some(parent) = full_path.parent() {
                 fs::create_dir_all(parent)
                     .with_context(|| format!("Failed to create parent dir: {:?}", parent))?;
             }
 
-            // Write generated code to disk
             fs::write(&full_path, &code)
                 .with_context(|| format!("Failed to write generated code to {:?}", full_path))?;
 
-            println!(
+            qprintln!(state,
                 "   {} Wrote {} bytes to '{}'",
                 "[+]".green(),
                 code.len(),
@@ -123,7 +121,6 @@ Return the complete file content enclosed within markdown code fences (e.g. ```r
 fn extract_code_block(text: &str) -> String {
     let trimmed = text.trim();
     if let Some(start) = trimmed.find("```") {
-        // Skip language tag line
         let remainder = &trimmed[start + 3..];
         let after_lang = if let Some(newline) = remainder.find('\n') {
             &remainder[newline + 1..]

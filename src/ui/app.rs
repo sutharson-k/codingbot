@@ -4,7 +4,7 @@ use crate::graph::state::AgentState;
 use crate::llm::HeuristicEngine;
 use anyhow::Result;
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -80,9 +80,17 @@ impl Default for AppState {
 }
 
 pub async fn run_terminal_gui() -> Result<()> {
+    // Install panic hook to ensure terminal is always restored
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        let _ = disable_raw_mode();
+        let _ = execute!(io::stdout(), LeaveAlternateScreen);
+        original_hook(panic_info);
+    }));
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -91,13 +99,10 @@ pub async fn run_terminal_gui() -> Result<()> {
 
     let res = run_loop(&mut terminal, app_state, is_task_running).await;
 
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
+    // Guaranteed terminal restoration
+    let _ = disable_raw_mode();
+    let _ = execute!(terminal.backend_mut(), LeaveAlternateScreen);
+    let _ = terminal.show_cursor();
 
     if let Err(err) = res {
         eprintln!("Error in Terminal GUI: {:?}", err);
@@ -126,8 +131,12 @@ async fn run_loop<B: Backend>(
 
         if crossterm::event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
+                // Exit on Ctrl+C, Q, or Esc
+                if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
+                    return Ok(());
+                }
                 match key.code {
-                    KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
+                    KeyCode::Char('q') | KeyCode::Char('Q') | KeyCode::Esc => return Ok(()),
                     KeyCode::Tab => {
                         let mut state = app_state.lock().unwrap();
                         state.active_tab = match state.active_tab {
@@ -200,9 +209,10 @@ fn spawn_test_task(app_state: Arc<Mutex<AppState>>, is_task_running: Arc<AtomicB
     }
 
     tokio::spawn(async move {
-        let output = std::process::Command::new("cargo")
+        let output = tokio::process::Command::new("cargo")
             .arg("test")
-            .output();
+            .output()
+            .await;
 
         let mut state = app_state.lock().unwrap();
         match output {
@@ -263,6 +273,7 @@ mod tests {
 
     let task = "Implement the Fibonacci function fibonacci(n: u64) -> u64 with unit tests";
     let mut state = AgentState::new(repo_path.clone(), task, 3);
+    state.quiet = true;
     state.metadata.insert("is_demo".to_string(), "true".to_string());
     state.metadata.insert("create_branch".to_string(), "true".to_string());
 
@@ -529,7 +540,7 @@ fn ui(f: &mut Frame, state: &AppState) {
         Span::raw(" Run Tests  "),
         Span::styled(" [Tab] ", Style::default().fg(Color::Black).bg(Color::Magenta)),
         Span::raw(" Switch Tab  "),
-        Span::styled(" [Q / Esc] ", Style::default().fg(Color::White).bg(Color::Red)),
+        Span::styled(" [Q / Esc / Ctrl+C] ", Style::default().fg(Color::White).bg(Color::Red)),
         Span::raw(" Quit"),
     ];
     let footer_p = Paragraph::new(Line::from(keys))

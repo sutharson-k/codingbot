@@ -18,7 +18,7 @@ impl Node for IndexRepoNode {
 
     async fn execute(&self, state: &mut AgentState) -> Result<()> {
         let repo_path = &state.repo_path;
-        println!(
+        qprintln!(state,
             "   {} Indexing repository at '{}'...",
             "[*]".blue(),
             repo_path.display()
@@ -64,7 +64,6 @@ impl Node for IndexRepoNode {
                     || rel_path == "index.js"
                     || rel_path == "main.py";
 
-                // Detect project type
                 if rel_path == "Cargo.toml" {
                     project_type = ProjectType::Rust;
                     detected_test_cmd = Some("cargo test".to_string());
@@ -78,7 +77,6 @@ impl Node for IndexRepoNode {
                     detected_test_cmd = Some("pytest".to_string());
                 }
 
-                // Capture preview for source or config files < 64KB
                 let preview = if size_bytes < 65536
                     && (is_entrypoint
                         || rel_path == "Cargo.toml"
@@ -115,7 +113,7 @@ impl Node for IndexRepoNode {
             is_dirty
         );
 
-        println!("   {} {}", "[+]".green(), summary);
+        qprintln!(state, "   {} {}", "[+]".green(), summary);
 
         state.index = Some(RepoIndex {
             root_path: repo_path.display().to_string(),
