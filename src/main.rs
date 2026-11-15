@@ -73,6 +73,9 @@ enum Commands {
     /// Run an end-to-end self-contained autonomous demo with simulated self-correction
     Demo,
 
+    /// Launch the interactive full-screen Terminal Dashboard (TUI)
+    Gui,
+
     /// Display the LangGraph state machine diagram and node topology
     Graph,
 }
@@ -82,6 +85,9 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Gui => {
+            codingbot::ui::run_terminal_gui().await?;
+        }
         Commands::Graph => {
             print_graph_visualization();
         }

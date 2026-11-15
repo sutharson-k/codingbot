@@ -29,25 +29,33 @@ echo ================================================================
 echo               CODINGBOT: AUTONOMOUS AGENT RUNTIME
 echo ================================================================
 echo.
-echo   1. Run Autonomous Demo (Full Index-Plan-Code-Test-SelfCorrect-PR)
-echo   2. View State Machine Graph (ASCII ^& Mermaid Topology)
-echo   3. Run Coding Agent on Custom Task / Repository
-echo   4. Run Test Suite (cargo test)
-echo   5. Build Release Executable (cargo build --release)
-echo   6. Exit
+echo   1. Launch Interactive Terminal GUI (Dashboard)
+echo   2. Run Autonomous Demo (Full Index-Plan-Code-Test-SelfCorrect-PR)
+echo   3. View State Machine Graph (ASCII ^& Mermaid Topology)
+echo   4. Run Coding Agent on Custom Task / Repository
+echo   5. Run Test Suite (cargo test)
+echo   6. Build Release Executable (cargo build --release)
+echo   7. Exit
 echo.
 echo ================================================================
-set /p CHOICE="Select an option (1-6): "
+set /p CHOICE="Select an option (1-7): "
 
-if "%CHOICE%"=="1" goto RUN_DEMO
-if "%CHOICE%"=="2" goto RUN_GRAPH
-if "%CHOICE%"=="3" goto RUN_CUSTOM
-if "%CHOICE%"=="4" goto RUN_TESTS
-if "%CHOICE%"=="5" goto RUN_BUILD
-if "%CHOICE%"=="6" goto EXIT
+if "%CHOICE%"=="1" goto RUN_GUI
+if "%CHOICE%"=="2" goto RUN_DEMO
+if "%CHOICE%"=="3" goto RUN_GRAPH
+if "%CHOICE%"=="4" goto RUN_CUSTOM
+if "%CHOICE%"=="5" goto RUN_TESTS
+if "%CHOICE%"=="6" goto RUN_BUILD
+if "%CHOICE%"=="7" goto EXIT
 echo.
-echo [!] Invalid selection, please enter 1, 2, 3, 4, 5, or 6.
+echo [!] Invalid selection, please enter 1 to 7.
 timeout /t 2 >nul
+goto MENU
+
+:RUN_GUI
+cls
+echo [CodingBot] Launching full-screen Terminal Dashboard...
+cargo run -- gui
 goto MENU
 
 :RUN_DEMO

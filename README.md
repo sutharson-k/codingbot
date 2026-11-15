@@ -160,20 +160,35 @@ The compiled binary will be located at `target/release/codingbot` (or `target/re
 
 ## Interactive CLI Commands
 
-### 1. Instant Autonomous Demo
+### 1. Interactive Terminal Dashboard (TUI)
+Launch the full-screen terminal interface with live execution progress gauges, node pipeline status, real-time agent audit logs, and unified Git diff inspector:
+
+```bash
+cargo run -- gui
+# Or launch directly with:
+start.bat gui
+```
+
+Keybindings in Terminal GUI:
+- `[D]`: Trigger autonomous self-healing demo
+- `[T]`: Run test suite (`cargo test`)
+- `[Tab]`: Toggle inspector tab between Live Logs and Git Diff / PR Preview
+- `[Q]` / `[Esc]`: Exit cleanly
+
+### 2. Instant Autonomous Demo
 Runs an end-to-end autonomous demonstration in an isolated sandbox. It initializes a Git repository, introduces a task, deliberately injects an initial edge-case bug, detects the test failure, automatically self-corrects, passes the test suite, and outputs the Git diff and Pull Request preview:
 
 ```bash
 cargo run -- demo
 ```
 
-### 2. View State Machine Topology
+### 3. View State Machine Topology
 Outputs the LangGraph ASCII diagram and Mermaid source:
 ```bash
 cargo run -- graph
 ```
 
-### 3. Run on a Target Repository
+### 4. Run on a Target Repository
 Execute CodingBot against any local repository:
 
 ```bash
